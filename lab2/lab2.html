@@ -1,0 +1,101 @@
+<html>
+    <head>
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <script type = "module">
+            import * as THREE from "https://web.cs.manchester.ac.uk/three/three.js-master/build/three.module.js";
+            import { OrbitControls } from "https://web.cs.manchester.ac.uk/three/three.js-master/examples/jsm/controls/OrbitControls.js";
+            var scene, camera, renderer, controls;
+            var sunGeometry, sunMesh, sunMaterial;
+            var earthGeometry, earthMesh, earthMaterial, earthSystem;
+            var moonGeometry, moonMesh, moonMaterial;
+            var pointlight, diffuselight;
+            var curve;
+            const loader = new THREE.TextureLoader();
+            init();
+            sun();
+            earth();
+            animate();
+
+            function init() {
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(75, (window.innerWidth / window.innerHeight) , 0.1, 10000 );
+                camera.position.z = 500;
+                camera.position.y = 30;
+                renderer = new THREE.WebGLRenderer();
+                renderer.setClearColor(0x000000, 1.0);
+                renderer.setSize( window.innerWidth, window.innerHeight);
+                document.body.appendChild( renderer.domElement );
+                diffuselight = new THREE.AmbientLight(0x404040, 0.8);
+                scene.add(diffuselight);
+                controls = new OrbitControls(camera, renderer.domElement);
+                controls.autoRotate = true;
+            }
+
+            function sun(){
+                var texture = loader.load('2k_sun.jpg');
+                sunGeometry = new THREE.SphereGeometry(109, 400, 200);
+                sunMaterial = new THREE.MeshStandardMaterial({
+                        emissive: 0xffd700,
+                        // emissiveMap: texture,
+                        emissiveIntensity: 1,
+                        wireframe: false,
+                        map: texture
+                    });
+                sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
+                scene.add(sunMesh); 
+                pointlight = new THREE.PointLight();
+                scene.add(pointlight);
+            }
+
+            function earth(){
+                var texture = loader.load('Earthmap1000x500.jpg');
+                earthGeometry = new THREE.SphereGeometry(25, 50, 50);
+                earthMaterial = new THREE.MeshPhongMaterial({
+                        //color:0x0000ff,
+                        map: texture
+                    });
+                earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+                earthSystem = new THREE.Group(); 
+                earthSystem.add(earthMesh);
+                moon();
+                earthSystem.add(moonMesh);
+                moonMesh.position.set(50, 0, 0);
+                scene.add(earthSystem);
+                curve = new THREE.EllipseCurve(0,0,400, 300, 0, 2 * Math.PI, false, 0)
+            }
+
+            function moon(){
+                var texture = loader.load('lroc_color_poles_1k.jpg');
+                moonGeometry = new THREE.SphereGeometry( 5, 40, 20);
+                moonMaterial = new THREE.MeshPhongMaterial({
+                        //color:0xffffff,
+                        map: texture
+                    });
+                moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
+                scene.add(moonMesh); 
+            }
+
+            function animate(){
+                var time, t, point;
+                time = 0.00001 * performance.now();
+                t = (time % 1);
+                point = curve.getPoint(t);
+                earthSystem.position.x = point.x;
+                earthSystem.position.z = point.y;
+                moonMesh.position.x = 50 * Math.cos(time*50)
+                moonMesh.position.z = 50 * Math.sin(time*50)
+                renderer.render(scene, camera);
+                requestAnimationFrame(animate);
+            }
+
+            
+        </script>
+    </body>
+</html>

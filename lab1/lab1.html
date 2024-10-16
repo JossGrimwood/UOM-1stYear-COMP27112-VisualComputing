@@ -1,0 +1,96 @@
+<html>
+    <head>
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <script type = "module">
+            import * as THREE from "https://web.cs.manchester.ac.uk/three/three.js-master/build/three.module.js";
+            var scene, camera, renderer, mesh;
+            initialize();
+            shaderCube();
+            animate();
+
+            function initialize() {
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(75, (window.innerWidth / window.innerHeight) , 0.1, 1000 );
+                // values are fov, aspect, near, far
+
+                // fov is the field of view of the camera   
+                    // decresing makes the cube appear larger 
+                    // increasing makes it appear smaller as it captures a wider angle 
+
+                // aspect is the aspect ration of the camera
+                    // decreasing makes squahes the view vertical
+                    // increasing makes squahes the view horizontaly
+
+                // near is the near plane of what the camera can see
+                    // increasing will cut of things close to the camera
+                    // decreasing will capture things close to the camera
+
+                // far is the far plane of what the camera can see
+                    // increasing will capture things far from the camera
+                    // decreasing will cut of things far from the camera
+
+                // together they defin a frustrum encapsulationg what the camera sees
+                camera.position.z = 5;
+                // moves the camera away from the origin where the box is defined so it can view it
+                    // increasing the value moves the camera away from the box making it appear smaller
+                    // decreasing makes it appear larger
+                // camera default points to origin
+                renderer = new THREE.WebGLRenderer();
+                renderer.setClearColor(0x000000, 1.0);
+                renderer.setSize( window.innerWidth, window.innerHeight);
+                // changes these values chnges the size of the rendered window in the browser either increasing or decreasing the side lengths
+
+                document.body.appendChild( renderer.domElement );
+            }
+
+            function shaderCube() {
+                var geometry = new THREE.BoxGeometry(2, 1, 1);
+                // these values define the side lengths of the box 
+                    // changing these will increase of decrease either the height width or length of the box
+                var material = new THREE.ShaderMaterial({
+                    fragmentShader: fragmentShader(),
+                    vertexShader: vertexShader(),
+                })
+                mesh = new THREE.Mesh(geometry, material);
+                scene.add(mesh)
+            }
+
+            function animate() {
+                renderer.render(scene, camera);
+                requestAnimationFrame(animate);
+                mesh.rotation.x += 0.011;
+                mesh.rotation.y += 0.013;
+                // increasing these values speeds up the cubes motion
+            }
+
+            function fragmentShader(){
+                return `
+                    varying vec3 vposInterpolated;
+                    void main() {
+                    gl_FragColor = vec4(vposInterpolated, 1.0);
+                    }
+                `
+                // the cuboids colour is effected by changing the gl_fragcolor  
+            }
+
+            function vertexShader(){
+                return `
+                    vec4 p;
+                    varying vec3 vposInterpolated;
+                    void main() {
+                    p = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    gl_Position = p;
+                    vposInterpolated = p.xyz;
+                    }
+                `
+            }
+        </script>
+    </body>
+</html>
